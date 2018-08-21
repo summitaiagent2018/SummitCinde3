@@ -668,6 +668,11 @@ app.intent('Fetch_Category',function (conv)
                     console.log("Inside else===>");
                     conv.contexts.set('identify_SR', 1);
                     conv.contexts.set('identify_incident', 1);
+                    conv.contexts.set('identify_status', 1);
+                    conv.contexts.set('Last_Incident_Status', 1);
+                    conv.contexts.set('Last_SR_Status', 1);
+                    conv.contexts.set('Last_week_incident', 1);
+                    conv.contexts.set('Last_week_SR', 1);
                     console.log("Session Stored Category: " + conv.data.category);
                     textToSpeech = "I am afraid to tell that the requested entity is not found in the list. I may be wrong. Hence, kindly request you to be more specific regarding your request so that I can help you with it.";
                     console.log("Speech: " + textToSpeech);
@@ -2080,7 +2085,7 @@ app.intent('Know_Status_Of_LastWeekIncident',function(conv)
                 conv.ask(new List({
                     title: 'List of Incidents',
                     items: Items,
-                }));  
+                }),new Suggestions('No Action Required'));  
                 resolve();
             }
             else if (slicedIncidentDetailsArr.length == 1)
@@ -2124,7 +2129,8 @@ app.intent('Get_Incident_Details',function(conv,params,option)
     var incidentNumber = '';
     var incidentStatus = '';
     var incidentSymptom = '';
-    var incidentCreatedDateTime = ''; 
+    var incidentCreatedDateTime = '';   
+    var isActionRequired = 1;
 
     if(conv.data.userID !='')
     {
@@ -2132,11 +2138,22 @@ app.intent('Get_Incident_Details',function(conv,params,option)
     }
 
     console.log("Option===>",option);
+  
     if(option)
     {
         incidentNumber = option;
     }
-
+    else
+    {
+        var resolvedQuery = conv.body.queryResult && conv.body.queryResult.queryText ? conv.body.queryResult.queryText : "";
+        if (resolvedQuery == 'No Action Required')
+        {
+            incidentNumber = '';
+            isActionRequired = 0;
+        }
+    }
+  if (incidentNumber != '' && isActionRequired == 1) 
+  {
     return new Promise(function(resolve,reject)
     {
         GetIncidentDetails(userID,noOfTickets,function(IncidentDetailsArr)
@@ -2189,6 +2206,16 @@ app.intent('Get_Incident_Details',function(conv,params,option)
             }    
         })
     })
+  }
+  else
+  {
+        conv.contexts.set('end_conversation', 1);
+        conv.ask(new SimpleResponse({
+            speech: 'Is there something else do you want me to assist you ?',
+            text: 'Is there something else do you want me to assist you ?',
+        }), new Suggestions(['Yes', 'No'])); 
+
+  }
 })
 
 app.intent('Know_Status_Of_LastWeekSR',function(conv)
@@ -2272,7 +2299,7 @@ app.intent('Know_Status_Of_LastWeekSR',function(conv)
                 conv.ask(new List({
                     title: 'List of SRs',
                     items: Items,
-                }));  
+                }),new Suggestions('No Action Required'));  
                 resolve();
             }
             else if (slicedSRDetailsArr.length == 1)
@@ -2318,6 +2345,7 @@ app.intent('Get_SR_Details',function(conv,params,option)
     var srStatus = '';
     var srCreateDateTime = '';
     var srDescription = '';
+    var isActionRequired = 1;
 
     if(conv.data.userID !='')
     {
@@ -2325,11 +2353,22 @@ app.intent('Get_SR_Details',function(conv,params,option)
     }
 
     console.log("Option===>",option);
+  
     if(option)
     {
         srNumber = option;
     }
-
+    else
+    {
+        var resolvedQuery = conv.body.queryResult && conv.body.queryResult.queryText ? conv.body.queryResult.queryText : "";
+        if (resolvedQuery == 'No Action Required')
+        {
+            srNumber = '';
+            isActionRequired = 0;
+        }
+    }
+if (srNumber != '' && isActionRequired == 1)
+{
     return new Promise(function(resolve,reject)
     {
         GetSRDetails(userID,noOfTickets,function(SRDetailsArr)
@@ -2382,6 +2421,15 @@ app.intent('Get_SR_Details',function(conv,params,option)
             }    
         })
     })
+  }
+  else
+  {
+        conv.contexts.set('end_conversation', 1);
+        conv.ask(new SimpleResponse({
+            speech: 'Is there something else do you want me to assist you ?',
+            text: 'Is there something else do you want me to assist you ?',
+        }), new Suggestions(['Yes', 'No'])); 
+   }
 })
 
 
